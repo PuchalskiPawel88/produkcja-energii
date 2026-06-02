@@ -185,6 +185,11 @@ class PSEEnergyDataFetcher:
             # Jeśli filtrowanie się nie powiodło, zwróć oryginalne dane
             print(f"  ⚠️  Nie udało się odfiltrować danych przyszłościowych: {e}")
             return df
+
+    def _build_filter_url(self, endpoint: str, odata_filter: str) -> str:
+        from urllib.parse import quote
+        encoded_filter = quote(odata_filter, safe="'")
+        return f"{endpoint}?$filter={encoded_filter}"
     
     def _fetch_single_day(self, date: str, max_retries: int = 3) -> Optional[pd.DataFrame]:
         """
@@ -199,12 +204,11 @@ class PSEEnergyDataFetcher:
         """
         endpoint = f"{self.BASE_URL}/his-wlk-cal"
         odata_filter = f"business_date eq '{date}'"
-        
-        params = {'$filter': odata_filter}
+        url = self._build_filter_url(endpoint, odata_filter)
         
         for attempt in range(max_retries):
             try:
-                response = self.session.get(endpoint, params=params, timeout=30)
+                response = self.session.get(url, timeout=30)
                 if response.status_code == 200:
                     data = response.json()
                     if data and 'value' in data and len(data['value']) > 0:
@@ -234,11 +238,10 @@ class PSEEnergyDataFetcher:
         """Pobiera dane dla zakresu dat (krótkiego okresu - max 1 dzień)."""
         endpoint = f"{self.BASE_URL}/his-wlk-cal"
         odata_filter = f"business_date ge '{date_from}' and business_date le '{date_to}'"
-        
-        params = {'$filter': odata_filter}
+        url = self._build_filter_url(endpoint, odata_filter)
         
         try:
-            response = self.session.get(endpoint, params=params, timeout=30)
+            response = self.session.get(url, timeout=30)
             
             if response.status_code == 200:
                 data = response.json()
