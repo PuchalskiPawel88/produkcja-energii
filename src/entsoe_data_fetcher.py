@@ -32,7 +32,8 @@ class ENTSOEDataFetcher:
         'hydro_run_of_river': 'B11',  # Woda (przepływowa)
         'hydro_reservoir': 'B12',  # Woda (zbiornikowa)
         'solar': 'B16',  # Słońce
-        'wind_onshore': 'B19',  # Wiatr lądowy
+        'wind_offshore': 'B18',  # Wiatr morski / offshore
+        'wind_onshore': 'B19',  # Wiatr lądowy / onshore
     }
     
     def __init__(self, api_key: Optional[str] = None):
@@ -267,7 +268,8 @@ class ENTSOEDataFetcher:
                 'Węgiel kamienny [MW]',
                 'Węgiel brunatny [MW]',
                 'Gaz [MW]',
-                'Wiatr lądowy [MW]',
+                'Wiatr offshore [MW]',
+                'Wiatr onshore [MW]',
                 'Słońce [MW]',
                 'Woda (przepływowa) [MW]',
                 'Woda (zbiornikowa) [MW]',
@@ -283,6 +285,12 @@ class ENTSOEDataFetcher:
             df_pivot['Woda [MW]'] = (
                 df_pivot['Woda (przepływowa) [MW]'].fillna(0) + 
                 df_pivot['Woda (zbiornikowa) [MW]'].fillna(0)
+            )
+
+            # Oblicz sumę wiatru offshore + onshore
+            df_pivot['Wiatr [MW]'] = (
+                df_pivot['Wiatr offshore [MW]'].fillna(0) +
+                df_pivot['Wiatr onshore [MW]'].fillna(0)
             )
             
             df_pivot.fillna(0, inplace=True)
@@ -312,7 +320,8 @@ class ENTSOEDataFetcher:
             'B11': 'Woda (przepływowa) [MW]',
             'B12': 'Woda (zbiornikowa) [MW]',
             'B16': 'Słońce [MW]',
-            'B19': 'Wiatr lądowy [MW]',
+            'B18': 'Wiatr offshore [MW]',
+            'B19': 'Wiatr onshore [MW]',
         }
         return type_mapping.get(psr_type, f'Nieznany typ ({psr_type}) [MW]')
     
